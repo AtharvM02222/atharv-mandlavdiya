@@ -1,0 +1,13 @@
+const atharv_mandlavdiya = `
+   _  _   _                   __  __              _ _           _ _
+  /_\\| |_| |_  __ _ _ ___ __ |  \\/  |__ _ _ _  __| | |__ ___ ____| (_)_  _ __ _
+ / _ \\  _| ' \\/ _\` | '_\\ V / | |\\/| / _\` | ' \\/ _\` | / _\` \\ V / _\` | | || / _\` |
+/_/ \\_\\__|_||_\\__,_|_|  \\_/  |_|  |_\\__,_|_||_\\__,_|_\\__,_|\\_/\\__,_|_|\\_, \\__,_|
+                                                                          |__/
+`;
+
+export function atharvm() {
+  console.log(atharv_mandlavdiya);
+  console.log("  Atharv Mandlavdiya");
+  console.log("  github.com/AtharvM02222");
+}
