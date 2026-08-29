@@ -8,6 +8,4 @@ const atharv_mandlavdiya = `
 
 export function atharvm() {
   console.log(atharv_mandlavdiya);
-  console.log("  Atharv Mandlavdiya");
-  console.log("  github.com/AtharvM02222");
 }

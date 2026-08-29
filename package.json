@@ -1,12 +1,12 @@
 {
   "name": "atharv-mandlavdiya",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "Made With Love By Atharv Mandlavdiya",
   "type": "module",
   "main": "atharvmandlavdiya.js",
   "exports": "./atharvmandlavdiya.js",
   "scripts": {
-    "": ""
+    "postinstall": "node postinstall.js"
   },
   "keywords": [
     "atharv",
