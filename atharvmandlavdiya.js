@@ -122,7 +122,7 @@ export function sign() {
   var rH = svgH * sampleScale;
 
   var svgBlob = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + svgW + ' ' + svgH + '" width="' + rW + '" height="' + rH + '">'
-    + '<path d="${PATH_D}" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>'
+    + '<path d="${PATH_D}" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>'
     + '</svg>';
 
   var svgUrl = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgBlob);
@@ -169,7 +169,7 @@ export function sign() {
         vx: 0, vy: 0,
         delay: delay,
         arrived: reduced,
-        size: 1.5 + Math.random() * 0.4,
+        size: 2.0 + Math.random() * 0.5,
         baseAlpha: t.a,
         phaseX: Math.random() * Math.PI * 2,
         phaseY: Math.random() * Math.PI * 2
