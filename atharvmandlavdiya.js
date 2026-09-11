@@ -18,11 +18,14 @@ const _svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 650 200" widt
     </linearGradient>
     <filter id="noise" x="0" y="0" width="100%" height="100%">
       <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" stitchTiles="stitch" result="n" />
-      <feColorMatrix in="n" type="saturate" values="0" />
+      <feColorMatrix in="n" type="saturate" values="0" result="mono" />
+      <feComponentTransfer in="mono">
+        <feFuncA type="linear" slope="3" intercept="-0.4" />
+      </feComponentTransfer>
     </filter>
   </defs>
   <rect width="650" height="200" fill="#000" />
-  <rect width="650" height="200" filter="url(#noise)" opacity="0.15" />
+  <rect width="650" height="200" filter="url(#noise)" opacity="0.25" />
   <path
     d="M 73 100 C 140.5 62, 230.5 78, 298 40 C 320.5 38, 350.5 102, 373 100 C 283 80, 163 120, 73 100 C 122.5 62, 188.5 78, 238 40 C 251.5 56, 269.5 144, 283 160 C 337 140, 409 180, 463 160 C 346 122, 190 138, 73 100 C 172 98, 304 162, 403 160 C 340 122, 256 138, 193 100 C 301 80, 445 120, 553 100 C 409 80, 217 120, 73 100 C 136 98, 220 162, 283 160 C 256 122, 220 138, 193 100 C 278.5 62, 392.5 78, 478 40 C 442 20, 394 60, 358 40 C 272.5 38, 158.5 102, 73 100"
     fill="none"
