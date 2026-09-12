@@ -16,16 +16,12 @@ const _svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 650 200" widt
       <stop offset="0%" stop-color="#404040" stop-opacity="1" />
       <stop offset="100%" stop-color="#4ecdc4" stop-opacity="1" />
     </linearGradient>
-    <filter id="noise" x="0" y="0" width="100%" height="100%">
-      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" stitchTiles="stitch" result="n" />
-      <feColorMatrix in="n" type="saturate" values="0" result="mono" />
-      <feComponentTransfer in="mono">
-        <feFuncA type="linear" slope="3" intercept="-0.4" />
-      </feComponentTransfer>
-    </filter>
+    <pattern id="noise" width="32" height="32" patternUnits="userSpaceOnUse">
+      <image href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAAAAABWESUoAAAEK0lEQVR42gEgBN/7Aznwhjc0DhESwqQHKFhA0l+kBa0cvFCwQjcIR3XeFavQA5tP6ZSnpoiyFmb+284tVKz4wDbmoB6KPRDpHIorOrSqBAvT6ZAxWU+RLLy/SzXLazYg0sXA8AiI8fwFvtgywSBiAFHYIMXD74AFOoiuOZbeUOgBhls2mGVOv1IApfoJObmdAXqjXq0DzSsdAbJhM1GU+jkt8yEHVkH1rY1da/uTIfpXAqjzLvxOltUtAv8oa/j1ypIQ9vjrsp2//yGjwg9fPcfSANhdjux/JuIyGQcveVXQ+PZtzR5UwgHHh+iS2PlPYZdvA7HiSlfL1WXcDkfc1D0qWuWfubMM1CUJ59Y+cvt2/Im6BM1JhVAaT2/TVEAyv2i6x1whD7G0+xnrFtvlJe4Q3/UrAu5a8ZQj/9QvZR1z6UayDiQWmLraZ2uJJwDQzC7Wz18kA+5gmFUoXNMgnKKmldTTJVoY1QYuhf+R5wWdYxILHH0LA1ivVKLZWgIEZ7BG9dqdoRsLOkV8khuJJgtx+CHKoTuJBD3UE7wxvffZPGkpgQDrE1bHLfEMzyY0zOZuC2Z2jqjrAwJmTuYWwJQAULKrTzI8hp+6g9Z6LSimmEcLMRA47NsxASdr5hMg+IYdBylOih+ztPzZReZLSm7wQ7gyD7HkLw+aBNJ3G1QZFrnlI4Ur86C8OR2xV6c+sBw9naompPgqx0kRACnwCRqzciMUD35mCk56QPI6b+6DvFU6U583DZ/Ay2UmAHw0mj0Vsdu9I64G1/o23bnrTt5aivfu34mlfSyO5nztA4Qxa9gdsl2RbtNpzcmk8J7wbCPRcQbxJucs6IHO6zAeA08rNuE76Nv83MDtKaY9AyiDqs2u0Oi2eugigtUug7IPAED7NAaR8PXhrl4agfQ6Ic37JRtNTJsrfzzVc8Lm4pjbBFwjFGTbl6InKvoMzw3QFQqa62Yd/U2J+EuQdGE52TxtACQeVJ2T4D/vm86L/OApFN2lgA0udQqJFFnw4o5c3/suA94rTvMGcxgIMS3PBjzLrxzeJeKaX+cZqCYRMhx77NfoBKNNGG3QbNf3Ncmc4CgED62xllAG9/qpzmELYuQJJUcmAIgBkJj6TOT3sKrB6aRgesR30hai8sPFTf0SQKkz4TPpAAdJ0U8m8IetyymowqL5EiN4k3Qu3jIz41WZDhemHJa3A7xYdDGBe+bXlpvGYHnVqPtuw4nVre7kXhX1hghWGM02Afc/Q0r04AB0v8J4FeWU4z+88R/G6+OKQzCpietpEC2FAm8NQsid7F+M467rDUrhVge+aYdBDtQepbIE9ElaZdMYArqq30bnxCF87sJMCzDS+y2PDEhN8xIUCU3/OGzybBLBAbz7aKzC1N2qRj6eD5HSxCm6RwQJMaO2jL34Ptnf1TbEwtL9rvZ/+sEAAAAASUVORK5CYII=" width="32" height="32" />
+    </pattern>
   </defs>
   <rect width="650" height="200" fill="#000" />
-  <rect width="650" height="200" filter="url(#noise)" opacity="0.25" />
+  <rect width="650" height="200" fill="url(#noise)" opacity="0.15" />
   <path
     d="M 73 100 C 140.5 62, 230.5 78, 298 40 C 320.5 38, 350.5 102, 373 100 C 283 80, 163 120, 73 100 C 122.5 62, 188.5 78, 238 40 C 251.5 56, 269.5 144, 283 160 C 337 140, 409 180, 463 160 C 346 122, 190 138, 73 100 C 172 98, 304 162, 403 160 C 340 122, 256 138, 193 100 C 301 80, 445 120, 553 100 C 409 80, 217 120, 73 100 C 136 98, 220 162, 283 160 C 256 122, 220 138, 193 100 C 278.5 62, 392.5 78, 478 40 C 442 20, 394 60, 358 40 C 272.5 38, 158.5 102, 73 100"
     fill="none"
