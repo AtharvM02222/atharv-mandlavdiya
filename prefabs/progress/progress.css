@@ -1,0 +1,40 @@
+@property --progress {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 0;
+}
+
+.progress-wrapper {
+  position: relative;
+  width: 100%;
+  min-height: 1024px;
+  padding: 0 4vw;
+  box-sizing: border-box;
+}
+
+progress-card {
+  display: block;
+  position: sticky;
+  top: calc(var(--vh, 1vh) * 15);
+  height: calc(var(--vh, 1vh) * 70);
+  margin-bottom: calc(var(--vh, 1vh) * 15);
+  scale: calc(0.5 + var(--progress) * 0.5);
+  clip-path: rect(
+    calc(20% - var(--progress) * 18%)
+    calc(70% + var(--progress) * 26%)
+    calc(80% + var(--progress) * 18%)
+    calc(30% - var(--progress) * 26%)
+    round calc(2.441rem - var(--progress) * 1.941rem)
+  );
+  transform: translateZ(0);
+  overflow: hidden;
+}
+
+progress-card img,
+progress-card video,
+progress-card > div {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
