@@ -7,14 +7,19 @@
 .progress-wrapper {
   position: relative;
   width: 100%;
-  min-height: 1024px;
+  max-width: 100%;
+  min-height: 300vh;
   padding: 0 4vw;
   box-sizing: border-box;
+  overflow: hidden;
 }
 
 progress-card {
   display: block;
   position: sticky;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
   top: calc(var(--vh, 1vh) * 15);
   height: calc(var(--vh, 1vh) * 70);
   margin-bottom: calc(var(--vh, 1vh) * 15);
@@ -35,6 +40,8 @@ progress-card video,
 progress-card > div {
   display: block;
   width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
   height: 100%;
   object-fit: cover;
 }

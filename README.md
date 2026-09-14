@@ -18,4 +18,17 @@ import { atharvm } from "atharv-mandlavdiya";
 atharvm();
 ```
 
+The package also provides a self-contained progress card custom element. Import
+the package once; registration and CSS injection happen automatically:
+
+```html
+<script type="module">
+  import "atharv-mandlavdiya";
+</script>
+
+<progress-card data-scroll-length="300">
+  <div></div>
+</progress-card>
+```
+
 MIT © [Atharv Mandlavdiya](https://github.com/AtharvM02222)

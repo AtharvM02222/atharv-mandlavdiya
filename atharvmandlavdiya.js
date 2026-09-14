@@ -10,6 +10,168 @@ export function atharvm() {
   console.log(atharv_mandlavdiya);
 }
 
+const progressCardStyles = `
+@property --progress {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 0;
+}
+
+.progress-wrapper {
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+  min-height: 300vh;
+  padding: 0 4vw;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+progress-card {
+  display: block;
+  position: sticky;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  top: calc(var(--vh, 1vh) * 15);
+  height: calc(var(--vh, 1vh) * 70);
+  margin-bottom: calc(var(--vh, 1vh) * 15);
+  scale: calc(0.5 + var(--progress) * 0.5);
+  clip-path: rect(
+    calc(20% - var(--progress) * 18%)
+    calc(70% + var(--progress) * 26%)
+    calc(80% + var(--progress) * 18%)
+    calc(30% - var(--progress) * 26%)
+    round calc(2.441rem - var(--progress) * 1.941rem)
+  );
+  transform: translateZ(0);
+  overflow: hidden;
+}
+
+progress-card img,
+progress-card video,
+progress-card > div {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  height: 100%;
+  object-fit: cover;
+}
+`;
+
+function injectProgressCardStyles(root) {
+  if (!root.document || root.document.getElementById('atharv-progress-card-styles')) return;
+
+  const style = root.document.createElement('style');
+  style.id = 'atharv-progress-card-styles';
+  style.textContent = progressCardStyles;
+  (root.document.head || root.document.documentElement).appendChild(style);
+}
+
+function isScrollable(element, root) {
+  const style = root.getComputedStyle(element);
+  const overflow = `${style.overflow} ${style.overflowY}`;
+  return /(auto|scroll|overlay)/.test(overflow) &&
+    (element.scrollHeight > element.clientHeight || /(auto|scroll|overlay)/.test(overflow));
+}
+
+function findScrollContainer(element, root) {
+  let parent = element.parentElement;
+  while (parent) {
+    if (isScrollable(parent, root)) return parent;
+    parent = parent.parentElement;
+  }
+  return root;
+}
+
+function getScrollPosition(container, root) {
+  return container === root ? (root.pageYOffset || root.scrollY || 0) : container.scrollTop;
+}
+
+function getViewportHeight(container, root) {
+  return container === root ? root.innerHeight : container.clientHeight;
+}
+
+function getWrapperPosition(wrapper, container, root) {
+  const wrapperRect = wrapper.getBoundingClientRect();
+  if (container === root) return wrapperRect.top + getScrollPosition(container, root);
+
+  const containerRect = container.getBoundingClientRect();
+  return wrapperRect.top - containerRect.top + getScrollPosition(container, root);
+}
+
+function clamp(value, min, max) {
+  return Math.min(max, Math.max(min, value));
+}
+
+function defineProgressCard(root) {
+  if (!root.document || !root.customElements || root.customElements.get('progress-card')) return;
+
+  root.customElements.define('progress-card', class extends root.HTMLElement {
+    constructor() {
+      super();
+      this._wrapper = null;
+      this._scrollContainer = null;
+      this._onScroll = () => this._updateProgress();
+      this._onResize = () => this._updateProgress();
+    }
+
+    connectedCallback() {
+      if (!this._wrapper) {
+        const scrollLength = Number.parseFloat(this.dataset.scrollLength) || 300;
+        const wrapper = root.document.createElement('div');
+        wrapper.className = 'progress-wrapper';
+        wrapper.style.minHeight = `${scrollLength}vh`;
+        this.parentNode.insertBefore(wrapper, this);
+        wrapper.appendChild(this);
+        this._wrapper = wrapper;
+      }
+
+      this._scrollContainer = findScrollContainer(this, root);
+      this._scrollContainer.addEventListener('scroll', this._onScroll, { passive: true });
+      root.addEventListener('resize', this._onResize, { passive: true });
+      this._updateProgress();
+    }
+
+    disconnectedCallback() {
+      if (this._scrollContainer) {
+        this._scrollContainer.removeEventListener('scroll', this._onScroll);
+        this._scrollContainer = null;
+      }
+      root.removeEventListener('resize', this._onResize);
+      if (this._wrapper && this._wrapper.parentNode && !this._wrapper.contains(this)) {
+        this._wrapper.parentNode.removeChild(this._wrapper);
+      }
+      this._wrapper = null;
+    }
+
+    _updateProgress() {
+      if (!this._wrapper || !this._scrollContainer) return;
+      const viewportHeight = getViewportHeight(this._scrollContainer, root);
+      const wrapperStart = getWrapperPosition(this._wrapper, this._scrollContainer, root);
+      const wrapperHeight = this._wrapper.offsetHeight ||
+        this._wrapper.getBoundingClientRect().height;
+      const wrapperEnd = wrapperStart + wrapperHeight - viewportHeight;
+      const scrollPosition = getScrollPosition(this._scrollContainer, root);
+      const progress = wrapperEnd <= wrapperStart
+        ? (scrollPosition >= wrapperEnd ? 1 : 0)
+        : clamp((scrollPosition - wrapperStart) / (wrapperEnd - wrapperStart), 0, 1);
+
+      this.style.setProperty('--progress', String(progress));
+    }
+  });
+}
+
+injectProgressCardStyles(globalThis);
+defineProgressCard(globalThis);
+
+// Kept as a compatibility no-op for consumers upgrading from the old API.
+export function progressCard() {
+  injectProgressCardStyles(globalThis);
+  defineProgressCard(globalThis);
+}
+
 const _svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 650 200" width="650" height="200">
   <defs>
     <linearGradient id="pathGradient" x1="0%" y1="0%" x2="100%" y2="0%">

@@ -1,65 +1,51 @@
 (function (root) {
   'use strict';
 
-  var _counter = 0;
-  var _started = false;
-  var _instance = null;
+  if (!root.document || !root.customElements || root.customElements.get('progress-card')) return;
 
-  function uid() {
-    _counter += 1;
-    return 'progress-' + _counter;
+  function scrollParent(element) {
+    var parent = element.parentElement;
+    while (parent) {
+      var style = root.getComputedStyle(parent);
+      if (/(auto|scroll|overlay)/.test(style.overflow + ' ' + style.overflowY)) return parent;
+      parent = parent.parentElement;
+    }
+    return root;
   }
 
-  function getStringTune() {
-    if (_instance) return _instance;
-    var ST = root.StringTune;
-    if (!ST) return null;
-    var Ctor = (ST.StringTune && typeof ST.StringTune.getInstance === 'function')
-      ? ST.StringTune
-      : (typeof ST.getInstance === 'function' ? ST : null);
-    if (!Ctor) return null;
-    _instance = Ctor.getInstance();
-    return _instance;
+  function scrollPosition(container) {
+    return container === root ? (root.pageYOffset || root.scrollY || 0) : container.scrollTop;
   }
 
-  function wrapElement(el) {
-    if (el.hasAttribute('data-progress-init')) return;
-    var scrollLen = parseInt(el.dataset.scrollLength, 10) || 1024;
-    var id = uid();
-
-    var wrapper = document.createElement('div');
-    wrapper.className = 'progress-wrapper';
-    wrapper.setAttribute('string', 'progress');
-    wrapper.setAttribute('string-id', id);
-    wrapper.setAttribute('string-enter-vp', 'top');
-    wrapper.setAttribute('string-exit-vp', 'bottom');
-    wrapper.style.minHeight = scrollLen + 'vh';
-
-    el.parentNode.insertBefore(wrapper, el);
-    wrapper.appendChild(el);
-    el.setAttribute('data-progress-init', id);
+  function update(card, wrapper, container) {
+    var viewport = container === root ? root.innerHeight : container.clientHeight;
+    var wrapperRect = wrapper.getBoundingClientRect();
+    var start = container === root
+      ? wrapperRect.top + scrollPosition(container)
+      : wrapperRect.top - container.getBoundingClientRect().top + scrollPosition(container);
+    var end = start + (wrapper.offsetHeight || wrapperRect.height) - viewport;
+    var range = end - start;
+    var progress = range > 0 ? (scrollPosition(container) - start) / range : 0;
+    card.style.setProperty('--progress', String(Math.min(1, Math.max(0, progress))));
   }
 
-  function startStringTune() {
-    if (_started) return;
-    var st = getStringTune();
-    if (!st) return;
-    var ST = root.StringTune;
-    if (ST.StringLazy) st.use(ST.StringLazy);
-    if (!ST.StringProgress) return;
-    st.use(ST.StringProgress);
-    st.start(0);
-    _started = true;
-    root.StringTuneContext = st;
-  }
+  root.customElements.define('progress-card', class extends root.HTMLElement {
+    connectedCallback() {
+      this._wrapper = root.document.createElement('div');
+      this._wrapper.className = 'progress-wrapper';
+      this._wrapper.style.minHeight = (parseFloat(this.dataset.scrollLength) || 300) + 'vh';
+      this.parentNode.insertBefore(this._wrapper, this);
+      this._wrapper.appendChild(this);
+      this._container = scrollParent(this);
+      this._update = () => update(this, this._wrapper, this._container);
+      this._container.addEventListener('scroll', this._update, { passive: true });
+      root.addEventListener('resize', this._update, { passive: true });
+      this._update();
+    }
 
-  if (root.customElements) {
-    root.customElements.define('progress-card', class extends HTMLElement {
-      connectedCallback() {
-        wrapElement(this);
-        startStringTune();
-      }
-    });
-  }
-
+    disconnectedCallback() {
+      if (this._container) this._container.removeEventListener('scroll', this._update);
+      root.removeEventListener('resize', this._update);
+    }
+  });
 }(typeof globalThis !== 'undefined' ? globalThis : window));
