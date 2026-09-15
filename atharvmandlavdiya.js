@@ -18,34 +18,57 @@ const progressCardStyles = `
 }
 
 .progress-wrapper {
+  display: grid;
+  grid-template-columns: repeat(14, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  align-items: start;
+  column-gap: 0.4rem;
   position: relative;
-  width: 100%;
-  max-width: 100%;
-  min-height: 300vh;
-  padding: 0 4vw;
-  box-sizing: border-box;
-  overflow: hidden;
+  min-height: 1024px;
+}
+
+@media (min-width: 1024px) {
+  .progress-wrapper {
+    column-gap: 0.8rem;
+  }
 }
 
 progress-card {
-  display: block;
+  grid-column-start: 1;
+  grid-column-end: 15;
+  grid-row-start: 1;
+  align-self: center;
+  height: calc(var(--vh, 1vh) * 40);
   position: sticky;
-  width: 100%;
-  max-width: 100%;
-  box-sizing: border-box;
-  top: calc(var(--vh, 1vh) * 15);
-  height: calc(var(--vh, 1vh) * 70);
-  margin-bottom: calc(var(--vh, 1vh) * 15);
+  top: calc(var(--vh, 1vh) * 30);
+  margin-bottom: calc(var(--vh, 1vh) * 30);
   scale: calc(0.5 + var(--progress) * 0.5);
   clip-path: rect(
-    calc(20% - var(--progress) * 18%)
-    calc(70% + var(--progress) * 26%)
-    calc(80% + var(--progress) * 18%)
-    calc(30% - var(--progress) * 26%)
-    round calc(2.441rem - var(--progress) * 1.941rem)
+    calc(20% - var(--progress) * 20%) 
+    calc(90% + var(--progress) * 10%) 
+    calc(80% + var(--progress) * 20%) 
+    calc(10% - var(--progress) * 10%)
+    round calc(2.441rem - var(--progress) * 2.441rem)
   );
   transform: translateZ(0);
   overflow: hidden;
+}
+
+@media (min-width: 1024px) {
+  progress-card {
+    grid-column-start: 3;
+    grid-column-end: 13;
+    top: calc(var(--vh, 1vh) * 15);
+    margin-bottom: calc(var(--vh, 1vh) * 15);
+    height: calc(var(--vh, 1vh) * 70);
+    clip-path: rect(
+      calc(20% - var(--progress) * 20%) 
+      calc(70% + var(--progress) * 30%) 
+      calc(80% + var(--progress) * 20%)
+      calc(30% - var(--progress) * 30%) 
+      round calc(2.441rem - var(--progress) * 2.441rem)
+    );
+  }
 }
 
 progress-card img,
@@ -53,8 +76,6 @@ progress-card video,
 progress-card > div {
   display: block;
   width: 100%;
-  max-width: 100%;
-  box-sizing: border-box;
   height: 100%;
   object-fit: cover;
 }
@@ -123,9 +144,9 @@ function defineProgressCard(root) {
         const wrapper = root.document.createElement('div');
         wrapper.className = 'progress-wrapper';
         wrapper.style.minHeight = `${scrollLength}vh`;
+        this._wrapper = wrapper;
         this.parentNode.insertBefore(wrapper, this);
         wrapper.appendChild(this);
-        this._wrapper = wrapper;
       }
 
       this._scrollContainer = findScrollContainer(this, root);
@@ -152,11 +173,16 @@ function defineProgressCard(root) {
       const wrapperStart = getWrapperPosition(this._wrapper, this._scrollContainer, root);
       const wrapperHeight = this._wrapper.offsetHeight ||
         this._wrapper.getBoundingClientRect().height;
-      const wrapperEnd = wrapperStart + wrapperHeight - viewportHeight;
+      const sectionStart = wrapperStart - viewportHeight;
+      const sectionEnd = wrapperStart + wrapperHeight - viewportHeight;
       const scrollPosition = getScrollPosition(this._scrollContainer, root);
-      const progress = wrapperEnd <= wrapperStart
-        ? (scrollPosition >= wrapperEnd ? 1 : 0)
-        : clamp((scrollPosition - wrapperStart) / (wrapperEnd - wrapperStart), 0, 1);
+      const progress = sectionEnd <= sectionStart
+        ? (scrollPosition >= sectionEnd ? 1 : 0)
+        : clamp(
+          (scrollPosition - sectionStart) / (sectionEnd - sectionStart),
+          0,
+          1
+        );
 
       this.style.setProperty('--progress', String(progress));
     }
