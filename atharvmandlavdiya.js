@@ -18,55 +18,47 @@ const progressCardStyles = `
 }
 
 .progress-wrapper {
-  display: grid;
-  grid-template-columns: repeat(14, 1fr);
-  grid-template-rows: repeat(2, 1fr);
-  align-items: start;
-  column-gap: 0.4rem;
   position: relative;
-  min-height: 1024px;
-}
-
-@media (min-width: 1024px) {
-  .progress-wrapper {
-    column-gap: 0.8rem;
-  }
+  width: 100%;
+  box-sizing: border-box;
 }
 
 progress-card {
-  grid-column-start: 1;
-  grid-column-end: 15;
-  grid-row-start: 1;
-  align-self: center;
-  height: calc(var(--vh, 1vh) * 40);
+  display: block;
   position: sticky;
-  top: calc(var(--vh, 1vh) * 30);
-  margin-bottom: calc(var(--vh, 1vh) * 30);
+  top: 30vh;
+  height: 40vh;
+  width: 100%;
+  margin-bottom: 30vh;
+  overflow: hidden;
+  --progress-card-radius-start: 2.441rem;
+  --progress-card-radius-end: 1rem;
   scale: calc(0.5 + var(--progress) * 0.5);
   clip-path: rect(
-    calc(20% - var(--progress) * 20%) 
-    calc(90% + var(--progress) * 10%) 
-    calc(80% + var(--progress) * 20%) 
+    calc(20% - var(--progress) * 20%)
+    calc(90% + var(--progress) * 10%)
+    calc(80% + var(--progress) * 20%)
     calc(10% - var(--progress) * 10%)
-    round calc(2.441rem - var(--progress) * 2.441rem)
+    round calc(var(--progress-card-radius-start) - var(--progress) * (var(--progress-card-radius-start) - var(--progress-card-radius-end)))
   );
   transform: translateZ(0);
-  overflow: hidden;
+  will-change: clip-path, scale;
 }
 
 @media (min-width: 1024px) {
   progress-card {
-    grid-column-start: 3;
-    grid-column-end: 13;
-    top: calc(var(--vh, 1vh) * 15);
-    margin-bottom: calc(var(--vh, 1vh) * 15);
-    height: calc(var(--vh, 1vh) * 70);
+    top: 15vh;
+    height: 70vh;
+    width: 70%;
+    margin-left: auto;
+    margin-right: auto;
+    margin-bottom: 15vh;
     clip-path: rect(
-      calc(20% - var(--progress) * 20%) 
-      calc(70% + var(--progress) * 30%) 
+      calc(20% - var(--progress) * 20%)
+      calc(70% + var(--progress) * 30%)
       calc(80% + var(--progress) * 20%)
-      calc(30% - var(--progress) * 30%) 
-      round calc(2.441rem - var(--progress) * 2.441rem)
+      calc(30% - var(--progress) * 30%)
+      round calc(var(--progress-card-radius-start) - var(--progress) * (var(--progress-card-radius-start) - var(--progress-card-radius-end)))
     );
   }
 }
@@ -82,7 +74,8 @@ progress-card > div {
 `;
 
 function injectProgressCardStyles(root) {
-  if (!root.document || root.document.getElementById('atharv-progress-card-styles')) return;
+  if (!root.document) return;
+  if (root.document.getElementById('atharv-progress-card-styles')) return;
 
   const style = root.document.createElement('style');
   style.id = 'atharv-progress-card-styles';
@@ -90,11 +83,14 @@ function injectProgressCardStyles(root) {
   (root.document.head || root.document.documentElement).appendChild(style);
 }
 
+function clamp(value, min, max) {
+  return Math.min(max, Math.max(min, value));
+}
+
 function isScrollable(element, root) {
   const style = root.getComputedStyle(element);
   const overflow = `${style.overflow} ${style.overflowY}`;
-  return /(auto|scroll|overlay)/.test(overflow) &&
-    (element.scrollHeight > element.clientHeight || /(auto|scroll|overlay)/.test(overflow));
+  return /(auto|scroll|overlay)/.test(overflow);
 }
 
 function findScrollContainer(element, root) {
@@ -107,84 +103,138 @@ function findScrollContainer(element, root) {
 }
 
 function getScrollPosition(container, root) {
-  return container === root ? (root.pageYOffset || root.scrollY || 0) : container.scrollTop;
+  if (container !== root) return container.scrollTop;
+  return root.scrollY || root.pageYOffset || 0;
 }
 
 function getViewportHeight(container, root) {
-  return container === root ? root.innerHeight : container.clientHeight;
+  if (container !== root) return container.clientHeight;
+  return root.innerHeight;
 }
 
-function getWrapperPosition(wrapper, container, root) {
-  const wrapperRect = wrapper.getBoundingClientRect();
-  if (container === root) return wrapperRect.top + getScrollPosition(container, root);
+const cards = new Set();
+let frameQueued = false;
 
-  const containerRect = container.getBoundingClientRect();
-  return wrapperRect.top - containerRect.top + getScrollPosition(container, root);
+function queueFrame() {
+  if (frameQueued) return;
+  frameQueued = true;
+  requestAnimationFrame(runFrame);
 }
 
-function clamp(value, min, max) {
-  return Math.min(max, Math.max(min, value));
+function runFrame() {
+  frameQueued = false;
+  for (const card of cards) {
+    if (card.dirty) card.measure();
+  }
+  for (const card of cards) card.render();
+}
+
+function markAllDirty() {
+  for (const card of cards) card.dirty = true;
+  queueFrame();
+}
+
+function releaseContainer(container) {
+  for (const card of cards) {
+    if (card.container === container) return;
+  }
+  container.removeEventListener('scroll', queueFrame);
 }
 
 function defineProgressCard(root) {
-  if (!root.document || !root.customElements || root.customElements.get('progress-card')) return;
+  if (!root.document || !root.customElements) return;
+  if (root.customElements.get('progress-card')) return;
+
+  root.addEventListener('resize', markAllDirty, { passive: true });
 
   root.customElements.define('progress-card', class extends root.HTMLElement {
     constructor() {
       super();
-      this._wrapper = null;
-      this._scrollContainer = null;
-      this._onScroll = () => this._updateProgress();
-      this._onResize = () => this._updateProgress();
+      this.wrapper = null;
+      this.container = null;
+      this.observer = null;
+      this.mounting = false;
+      this.dirty = true;
+      this.start = 0;
+      this.range = 1;
+      this.last = -1;
     }
 
     connectedCallback() {
-      if (!this._wrapper) {
-        const scrollLength = Number.parseFloat(this.dataset.scrollLength) || 300;
-        const wrapper = root.document.createElement('div');
-        wrapper.className = 'progress-wrapper';
-        wrapper.style.minHeight = `${scrollLength}vh`;
-        this._wrapper = wrapper;
-        this.parentNode.insertBefore(wrapper, this);
-        wrapper.appendChild(this);
+      if (this.mounting) return;
+      if (!this.wrapper) this.mount();
+
+      this.container = findScrollContainer(this, root);
+      this.container.addEventListener('scroll', queueFrame, { passive: true });
+
+      if (root.ResizeObserver && !this.observer) {
+        this.observer = new root.ResizeObserver(markAllDirty);
+        this.observer.observe(this.wrapper);
       }
 
-      this._scrollContainer = findScrollContainer(this, root);
-      this._scrollContainer.addEventListener('scroll', this._onScroll, { passive: true });
-      root.addEventListener('resize', this._onResize, { passive: true });
-      this._updateProgress();
+      cards.add(this);
+      this.dirty = true;
+      queueFrame();
     }
 
     disconnectedCallback() {
-      if (this._scrollContainer) {
-        this._scrollContainer.removeEventListener('scroll', this._onScroll);
-        this._scrollContainer = null;
-      }
-      root.removeEventListener('resize', this._onResize);
-      if (this._wrapper && this._wrapper.parentNode && !this._wrapper.contains(this)) {
-        this._wrapper.parentNode.removeChild(this._wrapper);
-      }
-      this._wrapper = null;
+      if (this.mounting) return;
+      cards.delete(this);
+
+      if (this.observer) this.observer.disconnect();
+      this.observer = null;
+
+      if (this.container) releaseContainer(this.container);
+      this.container = null;
+
+      const wrapper = this.wrapper;
+      this.wrapper = null;
+      if (!wrapper || !wrapper.parentNode) return;
+      if (wrapper.contains(this)) return;
+      wrapper.parentNode.removeChild(wrapper);
     }
 
-    _updateProgress() {
-      if (!this._wrapper || !this._scrollContainer) return;
-      const viewportHeight = getViewportHeight(this._scrollContainer, root);
-      const wrapperStart = getWrapperPosition(this._wrapper, this._scrollContainer, root);
-      const wrapperHeight = this._wrapper.offsetHeight ||
-        this._wrapper.getBoundingClientRect().height;
-      const sectionStart = wrapperStart - viewportHeight;
-      const sectionEnd = wrapperStart + wrapperHeight - viewportHeight;
-      const scrollPosition = getScrollPosition(this._scrollContainer, root);
-      const progress = sectionEnd <= sectionStart
-        ? (scrollPosition >= sectionEnd ? 1 : 0)
-        : clamp(
-          (scrollPosition - sectionStart) / (sectionEnd - sectionStart),
-          0,
-          1
-        );
+    mount() {
+      const length = Number.parseFloat(this.dataset.scrollLength) || 300;
+      const wrapper = root.document.createElement('div');
+      wrapper.className = 'progress-wrapper';
+      wrapper.style.minHeight = `${length}vh`;
 
-      this.style.setProperty('--progress', String(progress));
+      this.wrapper = wrapper;
+      this.mounting = true;
+      this.parentNode.insertBefore(wrapper, this);
+      wrapper.appendChild(this);
+      this.mounting = false;
+    }
+
+    measure() {
+      const container = this.container;
+      if (!container || !this.wrapper) return;
+
+      const viewport = getViewportHeight(container, root);
+      const rect = this.wrapper.getBoundingClientRect();
+      const scroll = getScrollPosition(container, root);
+
+      let top = rect.top + scroll;
+      if (container !== root) {
+        top = rect.top - container.getBoundingClientRect().top + scroll;
+      }
+
+      this.start = top;
+      this.range = Math.max(1, rect.height - viewport);
+      this.dirty = false;
+    }
+
+    render() {
+      if (!this.container) return;
+
+      const scroll = getScrollPosition(this.container, root);
+      const raw = (scroll - this.start) / this.range;
+      const value = Math.round(clamp(raw, 0, 1) * 1e4) / 1e4;
+
+      if (value === this.last) return;
+      this.last = value;
+      this.style.setProperty('--progress', String(value));
     }
   });
 }
@@ -196,6 +246,63 @@ defineProgressCard(globalThis);
 export function progressCard() {
   injectProgressCardStyles(globalThis);
   defineProgressCard(globalThis);
+}
+
+export function smoothScroll(options = {}) {
+  const root = globalThis;
+  if (!root.document || !root.matchMedia) return;
+  if (root.matchMedia('(pointer: coarse)').matches) return;
+
+  const speed = options.speed ?? 0.09;
+  const accel = options.accel ?? 0.42;
+  const multiplier = options.multiplier ?? 1.1;
+  const maxDelta = options.maxDelta ?? 2400;
+  const stop = options.stop ?? 0.08;
+
+  let delta = 0;
+  let target = 0;
+  let current = 0;
+  let running = false;
+
+  function limit() {
+    const doc = root.document.documentElement;
+    return Math.max(0, doc.scrollHeight - root.innerHeight);
+  }
+
+  function step() {
+    if (delta === 0) {
+      running = false;
+      return;
+    }
+
+    delta = clamp(delta, -maxDelta, maxDelta);
+    target = clamp(target + delta * accel, 0, limit());
+
+    const lerped = (target - current) * speed;
+    current += lerped;
+    delta *= 1 - accel;
+
+    if (Math.abs(lerped) < stop) {
+      current = Math.round(target);
+      delta = 0;
+    }
+
+    root.scrollTo(0, current);
+    requestAnimationFrame(step);
+  }
+
+  root.addEventListener('wheel', (event) => {
+    event.preventDefault();
+
+    if (!running) {
+      target = getScrollPosition(root, root);
+      current = target;
+      running = true;
+      requestAnimationFrame(step);
+    }
+
+    delta += event.deltaY * multiplier;
+  }, { passive: false });
 }
 
 const _svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 650 200" width="650" height="200">

@@ -20,13 +20,25 @@
   function update(card, wrapper, container) {
     var viewport = container === root ? root.innerHeight : container.clientHeight;
     var wrapperRect = wrapper.getBoundingClientRect();
-    var start = container === root
-      ? wrapperRect.top + scrollPosition(container)
-      : wrapperRect.top - container.getBoundingClientRect().top + scrollPosition(container);
-    var end = start + (wrapper.offsetHeight || wrapperRect.height) - viewport;
-    var range = end - start;
-    var progress = range > 0 ? (scrollPosition(container) - start) / range : 0;
-    card.style.setProperty('--progress', String(Math.min(1, Math.max(0, progress))));
+    var containerTop = container === root ? 0 : container.getBoundingClientRect().top;
+    
+    var elementTop = wrapperRect.top - containerTop;
+    var elementBottom = elementTop + wrapperRect.height;
+    
+    var enterPoint = elementTop + viewport;
+    var exitPoint = elementBottom;
+    var totalRange = enterPoint - exitPoint;
+    
+    if (totalRange <= 0) {
+      card.style.setProperty('--progress', '0');
+      return;
+    }
+    
+    var currentScroll = -elementTop;
+    var progress = (currentScroll - exitPoint) / totalRange;
+    progress = Math.max(0, Math.min(1, progress));
+    
+    card.style.setProperty('--progress', String(progress));
   }
 
   root.customElements.define('progress-card', class extends root.HTMLElement {

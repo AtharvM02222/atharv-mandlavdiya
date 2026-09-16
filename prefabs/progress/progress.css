@@ -5,30 +5,21 @@
 }
 
 .progress-wrapper {
-  display: grid;
-  grid-template-columns: repeat(14, 1fr);
-  grid-template-rows: repeat(2, 1fr);
-  align-items: start;
-  column-gap: 0.4rem;
   position: relative;
   min-height: 1024px;
-}
-
-@media (min-width: 1024px) {
-  .progress-wrapper {
-    column-gap: 0.8rem;
-  }
+  width: 100%;
+  box-sizing: border-box;
+  overflow: visible;
 }
 
 progress-card {
-  grid-column-start: 1;
-  grid-column-end: 15;
-  grid-row-start: 1;
-  align-self: center;
-  height: calc(var(--vh, 1vh) * 40);
+  display: block;
   position: sticky;
-  top: calc(var(--vh, 1vh) * 30);
-  margin-bottom: calc(var(--vh, 1vh) * 30);
+  top: 30vh;
+  height: 40vh;
+  width: 100%;
+  max-width: 100%;
+  margin-bottom: 30vh;
   scale: calc(0.5 + var(--progress) * 0.5);
   clip-path: rect(
     calc(20% - var(--progress) * 20%) 
@@ -43,11 +34,12 @@ progress-card {
 
 @media (min-width: 1024px) {
   progress-card {
-    grid-column-start: 3;
-    grid-column-end: 13;
-    top: calc(var(--vh, 1vh) * 15);
-    margin-bottom: calc(var(--vh, 1vh) * 15);
-    height: calc(var(--vh, 1vh) * 70);
+    top: 15vh;
+    height: 70vh;
+    width: 70%;
+    margin-left: auto;
+    margin-right: auto;
+    margin-bottom: 15vh;
     clip-path: rect(
       calc(20% - var(--progress) * 20%) 
       calc(70% + var(--progress) * 30%) 
